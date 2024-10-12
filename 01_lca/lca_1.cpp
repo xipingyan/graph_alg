@@ -1,71 +1,86 @@
+#include <algorithm>
+
 #include "../utils/graph.hpp"
 #include "private.hpp"
 
+// Refer: https://cp-algorithms.com/graph/lca.html
+// 
+#define SHOW_VERTICES_HEIGHT 0
+
 struct LCA {
-    std::vector<int> height, euler, first, segtree;
-    std::vector<bool> visited;
-    size_t n;
+    std::vector<NodePtr> vertices;
+    std::vector<int> height;
 
-    LCA(GraphPtr graph, int root = 0) {
-        n = graph->get_node_size();
-        height.resize(n);
-        first.resize(n);
-        euler.reserve(n * 2);
-        visited.assign(n, false);
-        dfs(graph, root);
-        int m = euler.size();
-        segtree.resize(m * 4);
-        build(1, 0, m - 1);
+    LCA(GraphPtr graph, size_t root_idx = 0)
+    {
+        // Depth first search
+        dfs(graph->get_node(0), 1);
+        
+#if SHOW_VERTICES_HEIGHT
+        std::cout << "\n== =========================" << std::endl;
+        std::cout << "== vertices:" << std::endl;
+        for (auto v : vertices) {
+            std::cout << v << ", ";
+        }
+        std::cout << "\n== height:" << std::endl;
+        for (auto h : height) {
+            std::cout << h << ", ";
+        }
+        std::cout << "\n== =========================" << std::endl;
+#endif
     }
 
-    void dfs(GraphPtr graph, int node, int h = 0) {
-        visited[node] = true;
-        height[node] = h;
-        first[node] = euler.size();
-        euler.push_back(node);
-        for (auto to : graph->get_node(node)) {
-            if (!visited[to]) {
-                dfs(graph, to, h + 1);
-                euler.push_back(node);
+    // Depth first search
+    void dfs(NodePtr node, int h)
+    {
+        vertices.emplace_back(node);
+        height.emplace_back(h);
+        for (auto son : node->get_son())
+        {
+            dfs(son, h + 1);
+            vertices.emplace_back(node);
+            height.emplace_back(h);
+        }
+    }
+
+    NodePtr lca(NodePtr u, NodePtr v) {
+        auto it_u = std::find(vertices.begin(), vertices.end(), u);
+        auto it_v = std::find(vertices.begin(), vertices.end(), v);
+        if (it_u != vertices.end() && it_v != vertices.end()) {
+            auto diff_u = it_u - vertices.begin();
+            auto diff_v = it_v - vertices.begin();
+            size_t left_id, right_id;
+            if (diff_u < diff_v)
+            {
+                left_id = diff_u;
+                right_id = diff_v;
             }
+            else
+            {
+
+                left_id = diff_v;
+                right_id = diff_u;
+            }
+ 
+            int minval = std::numeric_limits<int>::max();
+            size_t min_idx = 0;
+            for (size_t i = left_id; i <= right_id; i++)
+            {
+                if (height[i] < minval)
+                {
+                    minval = height[i];
+                    min_idx = i;
+                }
+            }
+
+            return vertices[min_idx];
         }
-    }
 
-    void build(int node, int b, int e) {
-        if (b == e) {
-            segtree[node] = euler[b];
-        } else {
-            int mid = (b + e) / 2;
-            build(node << 1, b, mid);
-            build(node << 1 | 1, mid + 1, e);
-            int l = segtree[node << 1], r = segtree[node << 1 | 1];
-            segtree[node] = (height[l] < height[r]) ? l : r;
-        }
-    }
-
-    int query(int node, int b, int e, int L, int R) {
-        if (b > R || e < L)
-            return -1;
-        if (b >= L && e <= R)
-            return segtree[node];
-        int mid = (b + e) >> 1;
-
-        int left = query(node << 1, b, mid, L, R);
-        int right = query(node << 1 | 1, mid + 1, e, L, R);
-        if (left == -1) return right;
-        if (right == -1) return left;
-        return height[left] < height[right] ? left : right;
-    }
-
-    int lca(int u, int v) {
-        int left = first[u], right = first[v];
-        if (left > right)
-            swap(left, right);
-        return query(1, 0, euler.size() - 1, left, right);
+        return nullptr;
     }
 };
 
 NodePtr lca_1(GraphPtr graph, NodePtr a, NodePtr b)
 {
-
+    return LCA(graph, 0).lca(a, b);
 }
