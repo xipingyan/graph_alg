@@ -35,9 +35,9 @@ struct LCA {
     {
         vertices.emplace_back(node);
         height.emplace_back(h);
-        for (auto son : node->get_son())
+        for (auto son_edge : node->get_son_edges())
         {
-            dfs(son, h + 1);
+            dfs(son_edge->son_node(), h + 1);
             vertices.emplace_back(node);
             height.emplace_back(h);
         }
