@@ -106,10 +106,12 @@ public:
     Graph(const std::string& name) {
         _name = name;
     }
+    void clear() {_nodes.clear();}
     void add_node(NodePtr node) {
         _nodes.emplace_back(node);
     }
 
+    std::vector<NodePtr> get_all_nodes() { return _nodes; }
     NodePtr get_node(size_t idx) {
         return idx < _nodes.size() ? _nodes[idx] : nullptr;
     }
@@ -164,6 +166,7 @@ public:
 private:
     std::string _name;
     std::vector<NodePtr> _nodes;
+    // std::unordered_map<std::string, NodePtr> _nodes;
 
     // 1: Find nodes with type Parameter
     // 2: Init flag
@@ -181,6 +184,30 @@ private:
 
 using GraphPtr=std::shared_ptr<Graph>;
 inline GraphPtr createGraph(const std::string& name) {return std::make_shared<Graph>(name);};
+
+inline bool IsSameGraph(const GraphPtr &lhs, const GraphPtr &rhs)
+{
+    auto all_nodes_l = lhs->get_all_nodes();
+    for (auto node : all_nodes_l) {
+        auto it = std::find(all_nodes_l.begin(), all_nodes_l.end(), node);
+        if (it == all_nodes_l.end()) {
+            return false;
+        }
+    }
+    auto all_nodes_r = rhs->get_all_nodes();
+    for (auto node : all_nodes_r) {
+        auto it = std::find(all_nodes_r.begin(), all_nodes_r.end(), node);
+        if (it == all_nodes_r.end()) {
+            return false;
+        }
+    }
+
+    if (all_nodes_r.size() == 0u && all_nodes_l.size() == 0u)
+    {
+        return true;
+    }
+    return true;
+}
 
 inline void CreateEdge(NodePtr parent, NodePtr son) {
     auto edge = std::make_shared<Edge>(parent, son);
