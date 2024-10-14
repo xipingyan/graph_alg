@@ -16,8 +16,8 @@ int main(int argc, char** argv) {
         std::cout << "== subgraph VS expected = " << IsSameGraph(subgraph, expected_subgraph) << std::endl;
     };
 
-    test_graph(create_test_graph_1);
-    // test_graph(create_test_graph_2);
+    // test_graph(create_test_graph_1);
+    test_graph(create_test_graph_2);
 
     return EXIT_SUCCESS;
 }
