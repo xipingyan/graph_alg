@@ -14,9 +14,11 @@
  *       n3   \
  *        |    n4
  *         \  /  \
- *          n5  others
+ *          n5    others
+ *           |        \  
+ *        ReadValue   Result2
  *           |
- *        ReadValue
+ *         Result1
  */
 GraphPtr create_test_graph_2(GraphPtr expected_subgraph)
 {
@@ -40,7 +42,9 @@ GraphPtr create_test_graph_2(GraphPtr expected_subgraph)
     CreateNodeWithName(n4);
     CreateNodeWithName(n5);
     CreateNodeWithName(ReadValue);
+    CreateNodeWithName(Result1);
     CreateNodeWithName(others);
+    CreateNodeWithName(Result2);
 
     // Construct edges to link these nodes.
     CreateEdge(inp1, n1);
@@ -52,6 +56,8 @@ GraphPtr create_test_graph_2(GraphPtr expected_subgraph)
     CreateEdge(n4, n5);
     CreateEdge(n4, others);
     CreateEdge(n5, ReadValue);
+    CreateEdge(ReadValue, Result1);
+    CreateEdge(others, Result2);
 
     graph->show_in_cmd();
 
