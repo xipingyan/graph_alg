@@ -9,7 +9,7 @@ GraphPtr find_init_graph(GraphPtr graph, NodePtr root) {
     int search_num = 0;
     std::unordered_set<NodePtr> flag;
     bool found_result = true; // Find result or out of max depth.
-    std::function<void(NodePtr, NodePtr)> check_succesor = [&](NodePtr node, NodePtr final_succesor){
+    std::function<void(NodePtr, NodePtr)> dsf = [&](NodePtr node, NodePtr final_succesor){
         search_num++;
         if (flag.find(node) != flag.end()) {
             DEBUG_LOG("  ** " << node << " is flagged, skipped.");
@@ -27,7 +27,11 @@ GraphPtr find_init_graph(GraphPtr graph, NodePtr root) {
             if (son_edge->son_node() == final_succesor) {
                 return;
             }
-            check_succesor(son_edge->son_node(), final_succesor);
+            dsf(son_edge->son_node(), final_succesor);
+        }
+        if (!found_result)
+        {
+            flag.insert(node);
         }
     };
 
@@ -40,9 +44,9 @@ GraphPtr find_init_graph(GraphPtr graph, NodePtr root) {
         // }
 
         // search_num = 0;
-        DEBUG_LOG("== Start check sucessor : " << node << ", search_num = " << search_num);
+        DEBUG_LOG("== Start dsf : " << node << ", search_num = " << search_num);
         found_result = false;
-        check_succesor(node, root);
+        dsf(node, root);
         flag.insert(node);
         DEBUG_LOG("--> found_result : " << found_result);
         if (found_result) {
@@ -56,6 +60,19 @@ GraphPtr find_init_graph(GraphPtr graph, NodePtr root) {
 
     assert(root->get_parent_edges().size() == 1u);
     reverseDSF(root->get_parent_edges()[0]->parent_node());
+
+    std::cout << "== subgraph = ";
+    for (auto cand : subgraph->get_all_nodes())
+    {
+        std::cout << cand << ", ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "== flag = ";
+    for (auto f : flag) {
+        std::cout << f << ",";
+    }
+    std::cout << std::endl;
 
     std::cout << "== Final search_num = " << search_num << std::endl;
     return subgraph;
