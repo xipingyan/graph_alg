@@ -105,6 +105,12 @@ std::pair<GraphPtr, GraphPtr> find_init_graph_2_set(GraphPtr graph, NodePtr root
             return;
         }
 
+        if (flag_path_to_rv.find(node) != flag_path_to_rv.end())
+        {
+            DEBUG_LOG("  ** " << node << " is flagged to flag_path_to_rv, skipped.");
+            return;
+        }
+
         DEBUG_LOG("  == check_succesor: " << node << ", search_num=" << search_num);
         if (node->get_type() == NodeType::Result) {
             found_result = true;
@@ -148,6 +154,13 @@ std::pair<GraphPtr, GraphPtr> find_init_graph_2_set(GraphPtr graph, NodePtr root
 
     std::cout << "== subgraph = ";
     for (auto cand : subgraph->get_all_nodes())
+    {
+        std::cout << cand << ", ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "== subgraph_input = ";
+    for (auto cand : subgraph_input->get_all_nodes())
     {
         std::cout << cand << ", ";
     }
