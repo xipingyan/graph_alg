@@ -123,6 +123,11 @@ std::pair<GraphPtr, GraphPtr> find_init_graph_2_set(GraphPtr graph, NodePtr root
             }
             dsf(son_edge->son_node(), final_succesor);
         }
+
+        if (found_result)
+        {
+            flag_path_to_output.insert(node);
+        }
     };
 
     std::function<void(NodePtr)> reverseDSF = [&](NodePtr node) {
