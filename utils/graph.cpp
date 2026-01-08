@@ -39,50 +39,60 @@ void Graph::execute() {
     }
 }
 
-void Graph::execute_async() {
+void Graph::build() {
     using namespace oneapi::tbb::flow;
 
     _flow_graph.reset();
+    _flow_nodes.clear();
+    _node_flow_map.clear();
+    _starter.reset();
 
-    using FlowNode = continue_node<continue_msg>;
-    std::vector<std::unique_ptr<FlowNode>> flow_nodes;
-    flow_nodes.reserve(_nodes.size());
-    std::unordered_map<NodePtr, FlowNode*> node_map;
+    _flow_nodes.reserve(_nodes.size());
 
     for (auto& node : _nodes) {
-        flow_nodes.emplace_back(std::make_unique<FlowNode>(
+        _flow_nodes.emplace_back(std::make_unique<FlowNode>(
             _flow_graph,
             [node](const continue_msg&) {
                 node->execute();
             }));
-        node_map[node] = flow_nodes.back().get();
+        _node_flow_map[node] = _flow_nodes.back().get();
     }
 
     for (auto& parent_node : _nodes) {
-        auto it_parent = node_map.find(parent_node);
-        if (it_parent == node_map.end()) {
+        auto it_parent = _node_flow_map.find(parent_node);
+        if (it_parent == _node_flow_map.end()) {
             continue;
         }
         for (auto& edge : parent_node->get_son_edges()) {
             auto child = edge->son_node();
-            auto it_child = node_map.find(child);
-            if (it_child != node_map.end()) {
+            auto it_child = _node_flow_map.find(child);
+            if (it_child != _node_flow_map.end()) {
                 make_edge(*it_parent->second, *it_child->second);
             }
         }
     }
 
-    broadcast_node<continue_msg> starter(_flow_graph);
+    _starter = std::make_unique<broadcast_node<continue_msg>>(_flow_graph);
     for (auto& node : _nodes) {
         if (node->get_parent_edges().empty()) {
-            auto it = node_map.find(node);
-            if (it != node_map.end()) {
-                make_edge(starter, *it->second);
+            auto it = _node_flow_map.find(node);
+            if (it != _node_flow_map.end()) {
+                make_edge(*_starter, *it->second);
             }
         }
     }
+}
 
-    starter.try_put(continue_msg{});
+void Graph::execute_async() {
+    using namespace oneapi::tbb::flow;
+
+    if (_flow_nodes.empty()) {
+        build();
+    }
+
+    if (_starter) {
+        _starter->try_put(continue_msg{});
+    }
     _flow_graph.wait_for_all();
 }
 

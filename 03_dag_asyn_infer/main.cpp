@@ -51,6 +51,7 @@ int main(int argc, char **argv)
 {
     PROFILE(m, "main");
     auto graph = generate_test_graph();
+    graph->build();
 
     for (size_t i = 0; i < 3; i++)
     {

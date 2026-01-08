@@ -23,6 +23,8 @@ public:
 
     NodePtr get_node(std::string name);
 
+    void build();
+
     void execute();
     void execute_async();
 
@@ -36,6 +38,10 @@ private:
     std::string _name;
     std::vector<NodePtr> _nodes;
     oneapi::tbb::flow::graph _flow_graph; // internal flow graph for async execution
+    using FlowNode = oneapi::tbb::flow::continue_node<oneapi::tbb::flow::continue_msg>;
+    std::vector<std::unique_ptr<FlowNode>> _flow_nodes; // cached flow nodes
+    std::unordered_map<NodePtr, FlowNode*> _node_flow_map; // map from logical node to flow node
+    std::unique_ptr<oneapi::tbb::flow::broadcast_node<oneapi::tbb::flow::continue_msg>> _starter;
 
     // std::unordered_map<std::string, NodePtr> _nodes;
 
