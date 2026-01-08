@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <unordered_set>
 
+#include <oneapi/tbb/flow_graph.h>
+
 #include "../utils/node.hpp"
 
 class Graph
@@ -22,6 +24,7 @@ public:
     NodePtr get_node(std::string name);
 
     void execute();
+    void execute_async();
 
     size_t get_node_size();
 
@@ -32,6 +35,8 @@ public:
 private:
     std::string _name;
     std::vector<NodePtr> _nodes;
+    oneapi::tbb::flow::graph _flow_graph; // internal flow graph for async execution
+
     // std::unordered_map<std::string, NodePtr> _nodes;
 
     // 1: Find nodes with type Parameter

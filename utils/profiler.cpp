@@ -86,7 +86,12 @@ private:
 
     void save_to_json() {
         std::string out_fn = std::string("profile_") + std::to_string(tsc_ticks_base) + ".json";
-        FILE* pf = fopen(out_fn.c_str(), "wb");
+        FILE* pf = nullptr;
+    #ifdef _MSC_VER
+        fopen_s(&pf, out_fn.c_str(), "wb");
+    #else
+        pf = fopen(out_fn.c_str(), "wb");
+    #endif
         if (nullptr == pf) {
             printf("Can't fopen: %s\n", out_fn.c_str());
             return;

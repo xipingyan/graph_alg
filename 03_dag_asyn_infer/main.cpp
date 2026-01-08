@@ -54,8 +54,15 @@ int main(int argc, char **argv)
 
     for (size_t i = 0; i < 3; i++)
     {
-        PROFILE_ARGS(e, "execute", {{"i", std::to_string(i)}});
-        graph->execute();
+        {
+
+            PROFILE_ARGS(e, "execute", { {"i", std::to_string(i)} });
+            graph->execute();
+        }
+        {
+			PROFILE_ARGS(ea, "execute async", { {"i", std::to_string(i)} });
+            graph->execute_async();
+        }
     }
     return EXIT_SUCCESS;
 }

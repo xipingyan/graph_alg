@@ -1,5 +1,6 @@
 #include <thread>
 #include <chrono>
+#include <unordered_map>
 
 #include "../utils/graph.hpp"
 #include "../utils/profiler.hpp"
@@ -33,10 +34,56 @@ size_t Graph::get_node_size()
 }
 
 void Graph::execute() {
-    // miss sort.
     for (auto& node : _nodes) {
-        node->execute();
+		node->execute();
     }
+}
+
+void Graph::execute_async() {
+    using namespace oneapi::tbb::flow;
+
+    _flow_graph.reset();
+
+    using FlowNode = continue_node<continue_msg>;
+    std::vector<std::unique_ptr<FlowNode>> flow_nodes;
+    flow_nodes.reserve(_nodes.size());
+    std::unordered_map<NodePtr, FlowNode*> node_map;
+
+    for (auto& node : _nodes) {
+        flow_nodes.emplace_back(std::make_unique<FlowNode>(
+            _flow_graph,
+            [node](const continue_msg&) {
+                node->execute();
+            }));
+        node_map[node] = flow_nodes.back().get();
+    }
+
+    for (auto& parent_node : _nodes) {
+        auto it_parent = node_map.find(parent_node);
+        if (it_parent == node_map.end()) {
+            continue;
+        }
+        for (auto& edge : parent_node->get_son_edges()) {
+            auto child = edge->son_node();
+            auto it_child = node_map.find(child);
+            if (it_child != node_map.end()) {
+                make_edge(*it_parent->second, *it_child->second);
+            }
+        }
+    }
+
+    broadcast_node<continue_msg> starter(_flow_graph);
+    for (auto& node : _nodes) {
+        if (node->get_parent_edges().empty()) {
+            auto it = node_map.find(node);
+            if (it != node_map.end()) {
+                make_edge(starter, *it->second);
+            }
+        }
+    }
+
+    starter.try_put(continue_msg{});
+    _flow_graph.wait_for_all();
 }
 
 void Graph::show_in_cmd()
