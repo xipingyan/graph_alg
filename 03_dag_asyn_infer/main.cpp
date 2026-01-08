@@ -24,7 +24,7 @@ GraphPtr generate_test_graph()
     types[0] = NodeType::Parameter;
     types[4] = NodeType::Result;
     {
-        for (size_t i = 0; i < 5; i++)
+        for (int i = 0; i < 5; i++)
         {
             PROFILE_ARGS(ien, "init execute node.", {{"idx", std::to_string(i)}});
             NodePtr node = std::make_shared<Node>(types[i] ? types[i] : NodeType::Execution, std::to_string(i));
