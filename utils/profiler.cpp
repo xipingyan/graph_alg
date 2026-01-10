@@ -7,6 +7,7 @@
 #include <sstream>
 #include <thread>
 #include <vector>
+#include <cstdlib>
 
 #include "../utils/profiler.hpp"
 
@@ -128,13 +129,28 @@ private:
     }
 };
 static ProfilerManager g_profileManage;
-MyProfile::MyProfile(const std::string& name, const std::vector<std::pair<std::string, std::string>>& args) {
+
+bool Profile::enabled() {
+    static bool checked = false;
+    static bool active = false;
+    if (!checked) {
+        const char* env = std::getenv("ENABLE_PROFILE");
+        if (env && std::string(env) == "1") {
+            active = true;
+        }
+        checked = true;
+    }
+    return active;
+}
+
+Profile::Profile(const std::string& name, const std::vector<std::pair<std::string, std::string>>& args) {
     _name = name;
     _args = args;
     _ts1 = __rdtsc();
 }
 
-MyProfile::~MyProfile() {
+Profile::~Profile() {
+    if (!_active) return;
     dump_items itm;
     itm.ts2 = __rdtsc();
     itm.ts1 = _ts1;
