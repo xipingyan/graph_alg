@@ -51,7 +51,7 @@ protected:
 
 public:
     ProfilerManager() {
-        if (tsc_ticks_per_second == 0) {
+        if (Profile::enabled() && tsc_ticks_per_second == 0) {
             uint64_t expected = 0;
             auto tps = rdtsc_calibrate();
             tsc_ticks_per_second.compare_exchange_strong(expected, tps);
@@ -64,9 +64,13 @@ public:
     ProfilerManager(ProfilerManager& other) = delete;
     void operator=(const ProfilerManager&) = delete;
     ~ProfilerManager() {
-        // Save tracing log to json file.
-        printf("=== ProfilerManager: unconstruct...............\n");
-        save_to_json();
+        if (Profile::enabled())
+        {
+
+            // Save tracing log to json file.
+            printf("=== ProfilerManager: unconstruct...............\n");
+            save_to_json();
+        }
     }
 
     void add(const dump_items& val) {
